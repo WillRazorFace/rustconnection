@@ -23,11 +23,14 @@ fn send_data(mut stream: &TcpStream, data: String) {
 fn main() {
     match TcpStream::connect(format!("{}:{}", HOST, PORT)) {
         Ok(stream) => {
-            println!("Connected in ({}:{})! Enjoy.\n", HOST, PORT);
-            loop {
-                let response: String = receive_data(&stream).unwrap();
+            let addr = stream.local_addr().unwrap();
 
-                println!("({}:{}) > {}", HOST, PORT, response);
+            println!("Connected in ({})! Enjoy.\n", addr);
+            loop {
+                let response: String = receive_data(&client).unwrap();
+
+                print!("({}) > {}", addr, response);
+                io::stdout().flush().unwrap();
 
                 print!("(You) > ");
                 io::stdout().flush().unwrap();
