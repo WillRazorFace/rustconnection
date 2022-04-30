@@ -27,7 +27,7 @@ fn main() {
 
             println!("Connected in ({})! Enjoy.\n", addr);
             loop {
-                let response: String = receive_data(&client).unwrap();
+                let response: String = receive_data(&stream).unwrap();
 
                 print!("({}) > {}", addr, response);
                 io::stdout().flush().unwrap();
