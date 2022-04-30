@@ -19,30 +19,35 @@ fn receive_data(mut stream: &TcpStream) -> io::Result<String> {
     Ok(String::from(from_utf8(&buffer).unwrap()))
 }
 
+fn handler(stream: TcpStream) {
+    let addr = stream.local_addr().unwrap();
+
+    println!("Connectd with ({}). Enjoy!\n", addr);
+
+    loop {
+        print!("(You) > ");
+        io::stdout().flush().unwrap();
+
+        let mut data = String::new();
+
+        io::stdin().read_line(&mut data).unwrap();
+        io::stdout().flush().unwrap();
+
+        send_data(&stream, data);
+
+        let response: String = receive_data(&stream).unwrap();
+
+        print!("({}) > {}", addr, response);
+        io::stdout().flush().unwrap();
+    }
+}
+
 fn main() {
     let server: TcpListener = TcpListener::bind(format!("0.0.0.0:{}", PORT)).unwrap();
 
     for client in server.incoming() {
         let client = client.unwrap();
-        let addr = client.local_addr().unwrap();
 
-        println!("Connectd with ({}). Enjoy!\n", addr);
-
-        loop {
-            print!("(You) > ");
-            io::stdout().flush().unwrap();
-
-            let mut data = String::new();
-
-            io::stdin().read_line(&mut data).unwrap();
-            io::stdout().flush().unwrap();
-
-            send_data(&client, data);
-
-            let response: String = receive_data(&client).unwrap();
-
-            print!("({}) > {}", addr, response);
-            io::stdout().flush().unwrap();
-        }
+        handler(client);
     }
 }
