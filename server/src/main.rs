@@ -5,14 +5,9 @@ use tokio::{
 
 const PORT: &str = "2202";
 
-#[tokio::main]
-async fn main() {
-    let server = TcpListener::bind(format!("0.0.0.0:{}", PORT))
-        .await
-        .unwrap();
-
+async fn handle_clients(listener: TcpListener) {
     loop {
-        let (mut client, addr) = server.accept().await.unwrap();
+        let (mut client, addr) = listener.accept().await.unwrap();
 
         tokio::spawn(async move {
             let (read, mut write) = client.split();
@@ -20,10 +15,19 @@ async fn main() {
             let mut reader = BufReader::new(read);
             let mut line = String::new();
 
-            println!("Connection from ({})", addr);
+            println!("[+] Connection from ({}) [+]", addr);
 
             loop {
-                let bytes_read = reader.read_line(&mut line).await.unwrap();
+                let bytes_read = match reader.read_line(&mut line).await {
+                    Ok(bytes) => bytes,
+                    Err(_e) => {
+                        write
+                            .write_all("Invalid character.".as_bytes())
+                            .await
+                            .unwrap();
+                        continue;
+                    }
+                };
 
                 if bytes_read == 0 {
                     break;
@@ -34,4 +38,13 @@ async fn main() {
             }
         });
     }
+}
+
+#[tokio::main]
+async fn main() {
+    let server = TcpListener::bind(format!("0.0.0.0:{}", PORT))
+        .await
+        .unwrap();
+
+    handle_clients(server).await;
 }
