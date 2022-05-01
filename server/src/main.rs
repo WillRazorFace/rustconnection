@@ -11,25 +11,27 @@ async fn main() {
         .await
         .unwrap();
 
-    let (mut client, addr) = server.accept().await.unwrap();
-    let (read, mut write) = client.split();
-
-    let mut reader = BufReader::new(read);
-    let mut line = String::new();
-
-    println!("Connection from ({})", addr);
-
     loop {
-        let bytes_read = reader.read_line(&mut line).await.unwrap();
+        let (mut client, addr) = server.accept().await.unwrap();
 
-        if bytes_read == 0 {
-            break;
-        }
+        tokio::spawn(async move {
+            let (read, mut write) = client.split();
 
-        write
-            .write_all(&line.as_bytes()[..line.as_bytes().len() - 1])
-            .await
-            .unwrap();
-        line.clear();
+            let mut reader = BufReader::new(read);
+            let mut line = String::new();
+
+            println!("Connection from ({})", addr);
+
+            loop {
+                let bytes_read = reader.read_line(&mut line).await.unwrap();
+
+                if bytes_read == 0 {
+                    break;
+                }
+
+                write.write_all(&line.as_bytes()).await.unwrap();
+                line.clear();
+            }
+        });
     }
 }

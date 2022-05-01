@@ -39,7 +39,7 @@ fn main() {
 
                 let response: String = receive_data(&stream).unwrap();
 
-                println!("({}) > {}", addr, response);
+                println!("({}) > {}", addr, &response[..response.len() - 1]);
                 io::stdout().flush().unwrap();
             }
         }
