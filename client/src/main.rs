@@ -9,10 +9,10 @@ const PORT: &str = "2202";
 fn receive_data(mut stream: &TcpStream) -> io::Result<String> {
     let mut buffer = [0u8; 1024];
 
-    stream.read(&mut buffer).unwrap();
+    let bytes_read = stream.read(&mut buffer).unwrap();
     stream.flush().unwrap();
 
-    Ok(String::from(from_utf8(&buffer).unwrap()))
+    Ok(String::from(from_utf8(&buffer[..bytes_read]).unwrap()))
 }
 
 fn send_data(mut stream: &TcpStream, data: String) {
@@ -27,9 +27,10 @@ fn main() {
 
             println!("Connected in ({})! Enjoy.\n", addr);
             loop {
+                send_data(&stream, String::from("Data"));
                 let response: String = receive_data(&stream).unwrap();
 
-                print!("({}) > {}", addr, response);
+                println!("({}) > {}", addr, response);
                 io::stdout().flush().unwrap();
 
                 print!("(You) > ");
