@@ -17,10 +17,19 @@ async fn main() {
     let mut reader = BufReader::new(read);
     let mut line = String::new();
 
-    println!("Connection from ({})!", addr);
+    println!("Connection from ({})", addr);
 
     loop {
-        reader.read_line(&mut line).await.unwrap();
-        write.write_all(line.as_bytes()).await.unwrap();
+        let bytes_read = reader.read_line(&mut line).await.unwrap();
+
+        if bytes_read == 0 {
+            break;
+        }
+
+        write
+            .write_all(&line.as_bytes()[..line.as_bytes().len() - 1])
+            .await
+            .unwrap();
+        line.clear();
     }
 }

@@ -21,18 +21,12 @@ fn send_data(mut stream: &TcpStream, data: String) {
 }
 
 fn main() {
-    match TcpStream::connect(format!("{}:{}", HOST, PORT)) {
-        Ok(stream) => {
-            let addr = stream.local_addr().unwrap();
+    let addr = format!("{}:{}", HOST, PORT);
 
+    match TcpStream::connect(&addr) {
+        Ok(stream) => {
             println!("Connected in ({})! Enjoy.\n", addr);
             loop {
-                send_data(&stream, String::from("Data"));
-                let response: String = receive_data(&stream).unwrap();
-
-                println!("({}) > {}", addr, response);
-                io::stdout().flush().unwrap();
-
                 print!("(You) > ");
                 io::stdout().flush().unwrap();
 
@@ -42,6 +36,11 @@ fn main() {
                 io::stdout().flush().unwrap();
 
                 send_data(&stream, data);
+
+                let response: String = receive_data(&stream).unwrap();
+
+                println!("({}) > {}", addr, response);
+                io::stdout().flush().unwrap();
             }
         }
         Err(e) => {
