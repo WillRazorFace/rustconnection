@@ -1,42 +1,20 @@
+mod gen;
+use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpListener,
+    sync::Mutex,
 };
 
 const PORT: &str = "2202";
 
-async fn handle_clients(listener: TcpListener) {
+async fn handle_clients(listener: TcpListener, clients_list: gen::Clients) {
     loop {
-        let (mut client, addr) = listener.accept().await.unwrap();
+        let (client, addr) = listener.accept().await.unwrap();
+        clients_list.lock().await.insert(addr.to_string(), client);
 
-        tokio::spawn(async move {
-            let (read, mut write) = client.split();
-
-            let mut reader = BufReader::new(read);
-            let mut line = String::new();
-
-            println!("[+] Connection from ({}) [+]", addr);
-
-            loop {
-                let bytes_read = match reader.read_line(&mut line).await {
-                    Ok(bytes) => bytes,
-                    Err(_e) => {
-                        write
-                            .write_all("Invalid character.".as_bytes())
-                            .await
-                            .unwrap();
-                        continue;
-                    }
-                };
-
-                if bytes_read == 0 {
-                    break;
-                }
-
-                write.write_all(&line.as_bytes()).await.unwrap();
-                line.clear();
-            }
-        });
+        println!("[+] Connection from ({}) [+]", addr);
     }
 }
 
@@ -45,6 +23,9 @@ async fn main() {
     let server = TcpListener::bind(format!("0.0.0.0:{}", PORT))
         .await
         .unwrap();
+    let clients: gen::Clients = Arc::new(Mutex::new(HashMap::new()));
 
-    handle_clients(server).await;
+    tokio::spawn(handle_clients(server, clients.clone()));
+
+    loop {}
 }
