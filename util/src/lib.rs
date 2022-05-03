@@ -9,7 +9,7 @@ use tokio::{
 
 pub type Clients = Arc<Mutex<Vec<TcpStream>>>;
 
-pub async fn read_file(path: String) -> Result<Vec<u8>, ()> {
+pub async fn read_file(path: String) -> Result<Vec<u8>, &'static str> {
     if Path::new(path.as_str()).exists() == true {
         let mut file = File::open("path").await.unwrap();
         let mut buffer = Vec::new();
@@ -18,7 +18,7 @@ pub async fn read_file(path: String) -> Result<Vec<u8>, ()> {
 
         Ok(buffer)
     } else {
-        Err(())
+        Err("Invalid directory")
     }
 }
 
@@ -34,17 +34,17 @@ pub async fn write_file(path: String, data: Vec<u8>) -> Result<(), ()> {
     }
 }
 
-pub async fn upload_file(path: String, mut stream: TcpStream) -> Result<(), ()> {
+pub async fn upload_file(path: String, mut stream: TcpStream) -> Result<(), &'static str> {
     if let Ok(data) = read_file(path).await {
         stream.write_all(&data).await.unwrap();
 
         Ok(())
     } else {
-        Err(())
+        Err("Can't read file")
     }
 }
 
-pub async fn download_file(path: String, mut stream: TcpStream) -> Result<(), ()> {
+pub async fn download_file(path: String, mut stream: TcpStream) -> Result<(), &'static str> {
     if let Ok(mut file) = File::create(path).await {
         let mut buffer: Vec<u8> = Vec::new();
 
@@ -54,7 +54,7 @@ pub async fn download_file(path: String, mut stream: TcpStream) -> Result<(), ()
 
         Ok(())
     } else {
-        Err(())
+        Err("Cant't create file")
     }
 }
 
