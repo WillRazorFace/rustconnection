@@ -10,7 +10,7 @@ use tokio::{
 pub type Clients = Arc<Mutex<Vec<TcpStream>>>;
 
 pub async fn read_file(path: &str) -> Result<Vec<u8>, &'static str> {
-    if Path::new(path).exists() == true {
+    if Path::new(path).is_file() == true {
         let mut file = File::open(path).await.unwrap();
         let mut buffer = Vec::new();
 
@@ -18,7 +18,7 @@ pub async fn read_file(path: &str) -> Result<Vec<u8>, &'static str> {
 
         Ok(buffer)
     } else {
-        Err("Invalid directory")
+        Err("Invalid path")
     }
 }
 
