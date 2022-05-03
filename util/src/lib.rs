@@ -22,18 +22,6 @@ pub async fn read_file(path: String) -> Result<Vec<u8>, &'static str> {
     }
 }
 
-pub async fn write_file(path: String, data: Vec<u8>) -> Result<(), ()> {
-    if Path::new(path.as_str()).exists() == true {
-        let mut file = File::open("path").await.unwrap();
-
-        file.write_all(&data).await.unwrap();
-
-        Ok(())
-    } else {
-        Err(())
-    }
-}
-
 pub async fn upload_file(path: String, mut stream: TcpStream) -> Result<(), &'static str> {
     if let Ok(data) = read_file(path).await {
         stream.write_all(&data).await.unwrap();
