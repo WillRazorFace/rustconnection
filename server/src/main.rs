@@ -1,17 +1,38 @@
 mod gen;
-use std::collections::HashMap;
 use std::io;
-use std::io::{Read, Write};
-use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
-use tokio::{net::TcpListener, sync::Mutex};
+use std::{io::Write, ops::Deref, sync::Arc, time::Duration};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
+    net::{TcpListener, TcpStream},
+    sync::Mutex,
+    time::timeout,
+};
 
 const PORT: &str = "2202";
 
 async fn handle_clients(listener: TcpListener, clients_list: gen::Clients) {
     loop {
-        let (client, addr) = listener.accept().await.unwrap();
+        let (client, _addr) = listener.accept().await.unwrap();
         clients_list.lock().await.push(client);
+    }
+}
+
+async fn check_connection(client: &mut TcpStream) -> Result<(), ()> {
+    let (read, mut write) = client.split();
+
+    let mut reader = BufReader::new(read);
+    let mut buffer = [0u8; 5];
+
+    write.write_all("CHECK_ALIVE".as_bytes()).await.unwrap();
+
+    if let Err(_) = timeout(Duration::from_secs(20), reader.read_exact(&mut buffer)).await {
+        return Err(());
+    }
+
+    if buffer == "ALIVE".as_bytes() {
+        return Ok(());
+    } else {
+        return Err(());
     }
 }
 
@@ -22,6 +43,7 @@ async fn main() {
         .unwrap();
     let clients: gen::Clients = Arc::new(Mutex::new(Vec::new()));
 
+    // Start handler
     tokio::spawn(handle_clients(server, clients.clone()));
 
     println!("\nType 'sessions' to see all clients");
@@ -33,6 +55,7 @@ async fn main() {
     io::stdin().read_line(&mut command).unwrap();
     println!("");
 
+    // If command is sessions, shows clients
     match command.as_str().trim() {
         "sessions" => {
             for (index, client) in clients.lock().await.deref().iter().enumerate() {
@@ -53,10 +76,17 @@ async fn main() {
                 Err(e) => panic!("Conversion error: {}", e),
             };
 
-            println!(
-                "\n{}",
-                clients.lock().await.get(session).unwrap().peer_addr().unwrap()
-            );
+            let mut client = clients.lock().await.remove(session);
+
+            // Check if client still connected
+            match check_connection(&mut client).await {
+                Ok(_e) => println!("[+] Still connected [+]"),
+                Err(_) => drop(client),
+            }
+
+            for (index, client) in clients.lock().await.deref().iter().enumerate() {
+                println!("[{}] {}", index, client.peer_addr().unwrap());
+            }
         }
         _ => {}
     }

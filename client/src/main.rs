@@ -25,22 +25,15 @@ fn main() {
 
     match TcpStream::connect(&addr) {
         Ok(stream) => {
-            println!("Connected in ({})! Enjoy.\n", addr);
+            println!("Connected in ({})\n", addr);
             loop {
-                print!("(You) > ");
-                io::stdout().flush().unwrap();
-
-                let mut data = String::new();
-
-                io::stdin().read_line(&mut data).unwrap();
-                io::stdout().flush().unwrap();
-
-                send_data(&stream, data);
-
                 let response: String = receive_data(&stream).unwrap();
 
-                println!("({}) > {}", addr, &response[..response.len() - 1]);
-                io::stdout().flush().unwrap();
+                if response == "CHECK_ALIVE" {
+                    send_data(&stream, String::from(""));
+                }
+
+                loop {}
             }
         }
         Err(e) => {
