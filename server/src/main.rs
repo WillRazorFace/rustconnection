@@ -1,12 +1,8 @@
-mod util;
 use std::io;
-use std::{io::Write, ops::Deref, sync::Arc, time::Duration};
-use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    net::{TcpListener, TcpStream},
-    sync::Mutex,
-    time::timeout,
-};
+use std::{io::Write, ops::Deref, sync::Arc};
+use tokio::{net::TcpListener, sync::Mutex};
+use util;
+mod core;
 
 const PORT: &str = "2202";
 
@@ -18,7 +14,7 @@ async fn main() {
     let clients: util::Clients = Arc::new(Mutex::new(Vec::new()));
 
     // Start handler
-    tokio::spawn(util::handle_clients(server, clients.clone()));
+    tokio::spawn(core::handle_clients(server, clients.clone()));
 
     println!("\nType 'sessions' to see all clients");
     print!(">>> ");
@@ -53,9 +49,12 @@ async fn main() {
             let mut client = clients.lock().await.remove(session);
 
             // Check if client still connected
-            match util::check_connection(&mut client).await {
+            match core::check_connection(&mut client).await {
                 Ok(_e) => println!("[+] Still connected [+]"),
-                Err(_) => drop(client),
+                Err(_) => {
+                    drop(client);
+                    println!("[-] Connection closed [-]")
+                }
             }
 
             for (index, client) in clients.lock().await.deref().iter().enumerate() {

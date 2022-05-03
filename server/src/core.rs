@@ -6,11 +6,10 @@ use tokio::{
     sync::Mutex,
     time::timeout,
 };
+use util;
 // use tokio::io::AsyncBufReadExt
 
-pub type Clients = Arc<Mutex<Vec<TcpStream>>>;
-
-pub async fn handle_clients(listener: TcpListener, clients_list: Clients) {
+pub async fn handle_clients(listener: TcpListener, clients_list: util::Clients) {
     loop {
         let (client, _addr) = listener.accept().await.unwrap();
         clients_list.lock().await.push(client);
