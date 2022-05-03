@@ -44,6 +44,20 @@ pub async fn upload_file(path: String, mut stream: TcpStream) -> Result<(), ()> 
     }
 }
 
+pub async fn download_file(path: String, mut stream: TcpStream) -> Result<(), ()> {
+    if let Ok(mut file) = File::create(path).await {
+        let mut buffer: Vec<u8> = Vec::new();
+
+        stream.read_to_end(&mut buffer).await.unwrap();
+
+        file.write_all(&buffer).await.unwrap();
+
+        Ok(())
+    } else {
+        Err(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
