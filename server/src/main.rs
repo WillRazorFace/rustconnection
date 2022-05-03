@@ -59,12 +59,36 @@ async fn main() {
                 Ok(_e) => println!("[+] Still connected [+]"),
                 Err(_) => {
                     drop(client);
-                    println!("[-] Connection closed [-]")
+                    println!("[-] Connection closed [-]");
+                    process::exit(1)
                 }
             }
 
-            for (index, client) in clients.lock().await.deref().iter().enumerate() {
-                println!("[{}] {}", index, client.peer_addr().unwrap());
+            println!("\nType 'upload' to upload file");
+            print!(">>> ");
+            io::stdout().flush().unwrap();
+
+            let mut command = String::new();
+
+            io::stdin().read_line(&mut command).unwrap();
+            println!("");
+
+            match command.as_str().trim() {
+                "upload" => {
+                    println!("\nInsert file path (example/path/to/your/file.png)");
+                    print!(">>> ");
+                    io::stdout().flush().unwrap();
+
+                    let mut path = String::new();
+
+                    io::stdin().read_line(&mut path).unwrap();
+                    println!("");
+
+                    util::upload_file(path.as_str().trim(), client)
+                        .await
+                        .unwrap();
+                }
+                _ => {}
             }
         }
         _ => {}
