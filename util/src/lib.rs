@@ -34,6 +34,16 @@ pub async fn write_file(path: String, data: Vec<u8>) -> Result<(), ()> {
     }
 }
 
+pub async fn upload_file(path: String, mut stream: TcpStream) -> Result<(), ()> {
+    if let Ok(data) = read_file(path).await {
+        stream.write_all(&data).await.unwrap();
+
+        Ok(())
+    } else {
+        Err(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
