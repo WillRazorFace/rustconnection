@@ -1,4 +1,5 @@
 use std::io;
+use std::process;
 use std::{io::Write, ops::Deref, sync::Arc};
 use tokio::{net::TcpListener, sync::Mutex};
 use util;
@@ -45,6 +46,11 @@ async fn main() {
                 Ok(session) => session,
                 Err(e) => panic!("Conversion error: {}", e),
             };
+
+            if clients.lock().await.len() < session {
+                println!("Incorrect index");
+                process::exit(1)
+            }
 
             let mut client = clients.lock().await.remove(session);
 
