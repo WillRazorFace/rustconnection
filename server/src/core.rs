@@ -1,9 +1,7 @@
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
     net::{TcpListener, TcpStream},
-    sync::Mutex,
     time::timeout,
 };
 use util;
