@@ -1,0 +1,37 @@
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt, BufReader},
+    net::{TcpListener, TcpStream},
+    sync::Mutex,
+    time::timeout,
+};
+// use tokio::io::AsyncBufReadExt
+
+pub type Clients = Arc<Mutex<Vec<TcpStream>>>;
+
+pub async fn handle_clients(listener: TcpListener, clients_list: Clients) {
+    loop {
+        let (client, _addr) = listener.accept().await.unwrap();
+        clients_list.lock().await.push(client);
+    }
+}
+
+pub async fn check_connection(client: &mut TcpStream) -> Result<(), ()> {
+    let (read, mut write) = client.split();
+
+    let mut reader = BufReader::new(read);
+    let mut buffer = [0u8; 5];
+
+    write.write_all("CHECK_ALIVE".as_bytes()).await.unwrap();
+
+    if let Err(_) = timeout(Duration::from_secs(20), reader.read_exact(&mut buffer)).await {
+        return Err(());
+    }
+
+    if buffer == "ALIVE".as_bytes() {
+        return Ok(());
+    } else {
+        return Err(());
+    }
+}
