@@ -1,8 +1,11 @@
+use std::env;
 use std::path::Path;
+use std::process;
+use std::str::from_utf8;
 use std::sync::Arc;
 use tokio::{
     fs::File,
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
     net::TcpStream,
     sync::Mutex,
 };
@@ -24,6 +27,12 @@ pub async fn read_file(path: &str) -> Result<Vec<u8>, &'static str> {
 
 pub async fn upload_file(path: &str, mut stream: TcpStream) -> Result<(), &'static str> {
     if let Ok(data) = read_file(path).await {
+        let filename = format!(
+            "{}\n",
+            Path::new(path).file_name().unwrap().to_str().unwrap()
+        );
+
+        stream.write_all(filename.as_bytes()).await.unwrap();
         stream.write_all(&data).await.unwrap();
 
         Ok(())
@@ -32,11 +41,24 @@ pub async fn upload_file(path: &str, mut stream: TcpStream) -> Result<(), &'stat
     }
 }
 
-pub async fn download_file(path: &str, mut stream: TcpStream) -> Result<(), &'static str> {
-    if let Ok(mut file) = File::create(path).await {
+pub async fn download_file(mut path: &str, mut stream: TcpStream) -> Result<(), &'static str> {
+    let (read, _write) = stream.split();
+    let mut reader = BufReader::new(read);
+    let mut filename = String::new();
+
+    let current_path = env::current_dir().unwrap();
+
+    let path = match path {
+        "" => current_path.to_str().unwrap(),
+        _ => path,
+    };
+
+    reader.read_line(&mut filename).await.unwrap();
+
+    if let Ok(mut file) = File::create(format!("{}/{}", path, filename.trim())).await {
         let mut buffer: Vec<u8> = Vec::new();
 
-        stream.read_to_end(&mut buffer).await.unwrap();
+        reader.read_to_end(&mut buffer).await.unwrap();
 
         file.write_all(&buffer).await.unwrap();
 

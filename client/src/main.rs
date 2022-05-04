@@ -1,4 +1,4 @@
-use std::io;
+use std::env;
 use std::io::{Read, Write};
 use std::str::from_utf8;
 use tokio::{
@@ -26,7 +26,7 @@ async fn main() {
                 stream.write_all("ALIVE".as_bytes()).await.unwrap();
             }
 
-            util::download_file("test", stream).await.unwrap();
+            util::download_file("", stream).await.unwrap();
         }
         Err(e) => {
             println!("Bad connection: {}", e)
