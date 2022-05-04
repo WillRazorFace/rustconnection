@@ -16,5 +16,6 @@ async fn main() {
     tokio::spawn(core::handle_clients(server, clients.clone()));
     println!("[+] Now listening in {} [+]\n", addr);
 
+    // Start menu
     menu::main_menu(clients).await;
 }
