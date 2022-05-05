@@ -6,6 +6,7 @@ use tokio::{
     net::TcpStream,
 };
 use util;
+use whoami;
 
 const HOST: &str = "localhost";
 const PORT: &str = "2202";
@@ -18,15 +19,12 @@ async fn main() {
         Ok(mut stream) => {
             println!("Connected in ({})\n", addr);
 
-            let mut buffer = [0u8; 11];
+            let (os, username, device_name) =
+                (whoami::distro(), whoami::username(), whoami::devicename());
 
-            stream.read(&mut buffer).await.unwrap();
-
-            if from_utf8(&buffer).unwrap() == "CHECK_ALIVE" {
-                stream.write_all("ALIVE".as_bytes()).await.unwrap();
-            }
-
-            util::download_file("", stream).await.unwrap();
+            stream.write_all(os.as_bytes()).await.unwrap();
+            stream.write_all(username.as_bytes()).await.unwrap();
+            stream.write_all(device_name.as_bytes()).await.unwrap();
         }
         Err(e) => {
             println!("Bad connection: {}", e)
