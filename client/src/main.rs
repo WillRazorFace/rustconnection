@@ -19,12 +19,14 @@ async fn main() {
         Ok(mut stream) => {
             println!("Connected in ({})\n", addr);
 
-            let (os, username, device_name) =
-                (whoami::distro(), whoami::username(), whoami::devicename());
+            let device_info = format!(
+                "{}\n{}\n{}",
+                whoami::distro(),
+                whoami::username(),
+                whoami::devicename()
+            );
 
-            stream.write_all(os.as_bytes()).await.unwrap();
-            stream.write_all(username.as_bytes()).await.unwrap();
-            stream.write_all(device_name.as_bytes()).await.unwrap();
+            stream.write_all(device_info.as_bytes()).await.unwrap();
         }
         Err(e) => {
             println!("Bad connection: {}", e)
