@@ -10,13 +10,29 @@ use util;
 
 pub async fn handle_clients(listener: TcpListener, clients_list: util::Clients) {
     loop {
-        let (client, _addr) = listener.accept().await.unwrap();
+        let (mut client, _addr) = listener.accept().await.unwrap();
+
+        let mut buffer = String::new();
+
+        client.read_to_string(&mut buffer).await.unwrap();
+
+        let device_info = buffer.lines().collect::<Vec<&str>>();
+
+        let (os, username, device_name) = (device_info[0], device_info[1], device_info[2]);
+
+        let client = util::Client::new(
+            client,
+            os.to_string(),
+            username.to_string(),
+            device_name.to_string(),
+        );
+
         clients_list.lock().await.push(client);
     }
 }
 
-pub async fn check_connection(client: &mut TcpStream) -> Result<(), ()> {
-    let (read, mut write) = client.split();
+pub async fn check_connection(client: &mut util::Client) -> Result<(), ()> {
+    let (read, mut write) = client.stream.split();
 
     let mut reader = BufReader::new(read);
     let mut buffer = [0u8; 5];

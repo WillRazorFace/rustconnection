@@ -10,7 +10,25 @@ use tokio::{
     sync::Mutex,
 };
 
-pub type Clients = Arc<Mutex<Vec<TcpStream>>>;
+pub struct Client {
+    pub stream: TcpStream,
+    pub os: String,
+    pub username: String,
+    pub device_name: String,
+}
+
+impl Client {
+    pub fn new(stream: TcpStream, os: String, username: String, device_name: String) -> Self {
+        Client {
+            stream: stream,
+            os: os,
+            username: username,
+            device_name: device_name,
+        }
+    }
+}
+
+pub type Clients = Arc<Mutex<Vec<Client>>>;
 
 pub async fn read_file(path: &str) -> Result<Vec<u8>, &'static str> {
     if Path::new(path).is_file() == true {
@@ -41,7 +59,7 @@ pub async fn upload_file(path: &str, mut stream: TcpStream) -> Result<(), &'stat
     }
 }
 
-pub async fn download_file(mut path: &str, mut stream: TcpStream) -> Result<(), &'static str> {
+pub async fn download_file(path: &str, mut stream: TcpStream) -> Result<(), &'static str> {
     let (read, _write) = stream.split();
     let mut reader = BufReader::new(read);
     let mut filename = String::new();

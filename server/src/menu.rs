@@ -29,7 +29,14 @@ pub async fn main_menu(mut client_list: util::Clients) {
                 println!("");
 
                 for (index, client) in client_list.lock().await.deref().iter().enumerate() {
-                    println!("[{}] {}", index, client.peer_addr().unwrap());
+                    println!(
+                        "[{}] {} | OS: {} | Current user: {} | Device name: {}",
+                        index,
+                        client.stream.peer_addr().unwrap(),
+                        client.os,
+                        client.username,
+                        client.device_name,
+                    );
                 }
 
                 println!("");
@@ -54,7 +61,7 @@ pub async fn main_menu(mut client_list: util::Clients) {
     }
 }
 
-async fn session_menu(mut client: TcpStream) {
+async fn session_menu(mut client: util::Client) {
     match core::check_connection(&mut client).await {
         Ok(_e) => _e,
         Err(_) => {
