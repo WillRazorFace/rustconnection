@@ -1,13 +1,5 @@
-use std::env;
-use std::io::{Read, Write};
 use std::process;
-use std::str::from_utf8;
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, BufReader},
-    net::TcpStream,
-};
-use util;
-use whoami;
+use tokio::net::TcpStream;
 mod core;
 
 #[tokio::main]
