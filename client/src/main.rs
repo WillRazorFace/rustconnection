@@ -1,5 +1,6 @@
 use std::env;
 use std::io::{Read, Write};
+use std::process;
 use std::str::from_utf8;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
@@ -7,29 +8,18 @@ use tokio::{
 };
 use util;
 use whoami;
-
-const HOST: &str = "localhost";
-const PORT: &str = "2202";
+mod core;
 
 #[tokio::main]
 async fn main() {
-    let addr = format!("{}:{}", HOST, PORT);
+    let addr = "localhost:2202";
 
-    match TcpStream::connect(&addr).await {
-        Ok(mut stream) => {
-            println!("Connected in ({})\n", addr);
-
-            let device_info = format!(
-                "{}\n{}\n{}",
-                whoami::distro(),
-                whoami::username(),
-                whoami::devicename()
-            );
-
-            stream.write_all(device_info.as_bytes()).await.unwrap();
+    match core::connect(addr).await {
+        Ok(mut stream) => stream,
+        Err(_e) => {
+            process::exit(1);
         }
-        Err(e) => {
-            println!("Bad connection: {}", e)
-        }
-    }
+    };
+
+    loop {}
 }
