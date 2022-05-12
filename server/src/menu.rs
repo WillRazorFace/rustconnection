@@ -58,14 +58,16 @@ pub async fn main_menu(mut client_list: util::Clients) {
 
                 let mut client = client_list.lock().await.remove(session);
 
-                session_menu(client).await;
+                let changed_client = session_menu(client).await;
+
+                client_list.lock().await.push(changed_client);
             }
             _ => {}
         }
     }
 }
 
-async fn session_menu(mut client: util::Client) {
+async fn session_menu(mut client: util::Client) -> util::Client {
     match core::check_connection(&mut client).await {
         Ok(_e) => _e,
         Err(_) => {
@@ -75,5 +77,5 @@ async fn session_menu(mut client: util::Client) {
         }
     }
 
-    println!("Ok");
+    client
 }
