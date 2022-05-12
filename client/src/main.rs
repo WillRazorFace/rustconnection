@@ -6,7 +6,7 @@ mod core;
 async fn main() {
     let addr = "localhost:2202";
 
-    match core::connect(addr).await {
+    let mut stream = match core::connect(addr).await {
         Ok(mut stream) => stream,
         Err(_e) => {
             process::exit(1);

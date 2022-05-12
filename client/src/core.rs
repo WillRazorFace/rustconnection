@@ -17,7 +17,8 @@ pub async fn connect(addr: &str) -> Result<TcpStream, ()> {
                 whoami::devicename()
             );
 
-            stream.write_all(device_info.as_bytes()).await.unwrap();
+            util::send_with_delimiter(&mut stream, device_info.as_bytes()).await;
+
             Ok(stream)
         }
         Err(_e) => Err(()),

@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{str::from_utf8, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
@@ -12,11 +12,9 @@ pub async fn handle_clients(listener: TcpListener, clients_list: util::Clients) 
     loop {
         let (mut client, _addr) = listener.accept().await.unwrap();
 
-        let mut buffer = String::new();
+        let mut buffer = util::receive_with_delimiter(&mut client).await;
 
-        client.read_to_string(&mut buffer).await.unwrap();
-
-        let device_info = buffer.lines().collect::<Vec<&str>>();
+        let device_info = from_utf8(&buffer).unwrap().lines().collect::<Vec<&str>>();
 
         let (os, username, device_name) = (device_info[0], device_info[1], device_info[2]);
 
