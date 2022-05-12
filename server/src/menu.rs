@@ -9,13 +9,19 @@ use tokio::{
 };
 use util;
 
-fn read_user_input() -> String {
+fn read_user_input() -> Vec<String> {
     print!(">>> ");
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
 
     io::stdin().read_line(&mut input).unwrap();
+
+    let input = input
+        .trim()
+        .split(" ")
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>();
 
     input
 }
@@ -58,24 +64,26 @@ pub async fn main_menu(mut client_list: util::Clients) {
 
                 let mut client = client_list.lock().await.remove(session);
 
-                let changed_client = session_menu(client).await;
+                match session_menu(client).await {
+                    Ok(changed_client) => client_list.lock().await.push(changed_client),
+                    Err(_e) => _e,
+                }
 
-                client_list.lock().await.push(changed_client);
+                continue;
             }
             _ => {}
         }
     }
 }
 
-async fn session_menu(mut client: util::Client) -> util::Client {
+async fn session_menu(mut client: util::Client) -> Result<util::Client, ()> {
     match core::check_connection(&mut client).await {
         Ok(_e) => _e,
         Err(_) => {
-            drop(client);
             println!("\n[-] Connection closed [-]");
-            process::exit(1);
+            return Err(());
         }
     }
 
-    client
+    Ok(client)
 }
