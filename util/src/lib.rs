@@ -94,3 +94,18 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+
+pub async fn send_with_delimiter(stream: &mut TcpStream, data: &[u8]) {
+    stream.write_all(data).await.unwrap();
+    stream.write_all("\r".as_bytes()).await.unwrap();
+}
+
+pub async fn receive_with_delimiter(stream: &mut TcpStream) -> Vec<u8> {
+    let (read, _write) = stream.split();
+    let mut reader = BufReader::new(read);
+    let mut buffer: Vec<u8> = Vec::new();
+
+    reader.read_until(b'\r', &mut buffer).await.unwrap();
+
+    buffer
+}
