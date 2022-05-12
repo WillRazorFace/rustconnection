@@ -2,7 +2,11 @@
 mod core;
 use std::io::Write;
 use std::{io, ops::Deref, process, thread, time};
-use tokio::{net::TcpStream, sync::Mutex};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::TcpStream,
+    sync::Mutex,
+};
 use util;
 
 fn read_user_input() -> String {
@@ -70,4 +74,6 @@ async fn session_menu(mut client: util::Client) {
             process::exit(1);
         }
     }
+
+    println!("Ok");
 }

@@ -13,5 +13,7 @@ async fn main() {
         }
     };
 
+    core::handle_flags(&mut stream).await;
+
     loop {}
 }

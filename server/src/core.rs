@@ -35,7 +35,7 @@ pub async fn check_connection(client: &mut util::Client) -> Result<(), ()> {
     let mut reader = BufReader::new(read);
     let mut buffer = [0u8; 5];
 
-    write.write_all("CHECK_ALIVE".as_bytes()).await.unwrap();
+    write.write_all("CHECK_ALIVE\r".as_bytes()).await.unwrap();
 
     if let Err(_) = timeout(Duration::from_secs(20), reader.read_exact(&mut buffer)).await {
         return Err(());
