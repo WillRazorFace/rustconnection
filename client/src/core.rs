@@ -26,10 +26,12 @@ pub async fn connect(addr: &str) -> Result<TcpStream, ()> {
 }
 
 pub async fn handle_flags(stream: &mut TcpStream) {
-    let flag = util::receive_with_delimiter(stream).await;
+    loop {
+        let flag = util::receive_with_delimiter(stream).await;
 
-    if from_utf8(&flag).unwrap().trim() == "CHECK_ALIVE" {
-        stream.write_all("ALIVE".as_bytes()).await.unwrap();
-        println!("Yes")
+        match from_utf8(&flag).unwrap().trim() {
+            "CHECK_ALIVE" => stream.write_all("ALIVE".as_bytes()).await.unwrap(),
+            _e => {}
+        }
     }
 }
