@@ -47,11 +47,7 @@ pub async fn main_menu(client_list: util::Clients) {
                     for (index, client) in client_list.lock().await.deref().iter().enumerate() {
                         println!(
                             "\t[{}] {} | OS: {} | Current user: {} | Device name: {}",
-                            index,
-                            client.stream.peer_addr().unwrap(),
-                            client.os,
-                            client.username,
-                            client.device_name,
+                            index, client.peer_addr, client.os, client.username, client.device_name,
                         );
                     }
                 } else {
@@ -81,8 +77,7 @@ pub async fn main_menu(client_list: util::Clients) {
 
                             println!(
                                 "[!] {}/{} disconnected [!]",
-                                client.stream.peer_addr().unwrap(),
-                                client.username
+                                client.peer_addr, client.username
                             );
                         }
                         _e => {}
@@ -121,9 +116,8 @@ pub async fn main_menu(client_list: util::Clients) {
                         Ok(_e) => _e,
                         Err(_e) => {
                             println!(
-                                "[!] /{} disconnected [!]",
-                                //client.stream.peer_addr().unwrap(),
-                                client.username
+                                "[!] {}/{} disconnected [!]",
+                                client.peer_addr, client.username
                             );
                             remove_index.push(index);
                         }
