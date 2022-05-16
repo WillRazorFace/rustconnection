@@ -70,7 +70,12 @@ pub async fn main_menu(client_list: util::Clients) {
 
                     match args[0].to_lowercase().as_str() {
                         "i" => {
-                            println!("{}", args.get(1).unwrap());
+                            let mut client = client_list.lock().await.remove(session);
+
+                            match session_menu(client).await {
+                                Ok(changed_client) => client_list.lock().await.push(changed_client),
+                                Err(_e) => _e,
+                            }
                         }
                         "r" => {
                             let client = client_list.lock().await.remove(session);
@@ -85,24 +90,6 @@ pub async fn main_menu(client_list: util::Clients) {
                 }
 
                 println!("");
-
-                // let session = read_user_input();
-                //
-                // let session: usize = match session.trim().parse() {
-                //     Ok(session) => session,
-                //     Err(e) => panic!("Conversion error: {}", e),
-                // };
-                //
-                // if client_list.lock().await.len() < session {
-                //     println!("Incorrect index");
-                // }
-                //
-                // let mut client = client_list.lock().await.remove(session);
-                //
-                // match session_menu(client).await {
-                //     Ok(changed_client) => client_list.lock().await.push(changed_client),
-                //     Err(_e) => _e,
-                // }
 
                 continue;
             }
@@ -140,7 +127,10 @@ async fn session_menu(mut client: util::Client) -> Result<util::Client, ()> {
     match core::check_connection(&mut client).await {
         Ok(_e) => _e,
         Err(_) => {
-            println!("\n[-] Connection closed [-]");
+            println!(
+                "[!] {}/{} disconnected [!]",
+                client.peer_addr, client.username
+            );
             return Err(());
         }
     }
