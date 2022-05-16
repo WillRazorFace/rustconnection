@@ -1,4 +1,5 @@
 use std::env;
+use std::net::SocketAddr;
 use std::path::Path;
 use std::process;
 use std::str::from_utf8;
@@ -12,15 +13,23 @@ use tokio::{
 
 pub struct Client {
     pub stream: TcpStream,
+    pub peer_addr: SocketAddr,
     pub os: String,
     pub username: String,
     pub device_name: String,
 }
 
 impl Client {
-    pub fn new(stream: TcpStream, os: String, username: String, device_name: String) -> Self {
+    pub fn new(
+        stream: TcpStream,
+        peer_addr: SocketAddr,
+        os: String,
+        username: String,
+        device_name: String,
+    ) -> Self {
         Client {
             stream: stream,
+            peer_addr: peer_addr,
             os: os,
             username: username,
             device_name: device_name,

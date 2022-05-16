@@ -11,6 +11,7 @@ use util;
 pub async fn handle_clients(listener: TcpListener, clients_list: util::Clients) {
     loop {
         let (mut client, _addr) = listener.accept().await.unwrap();
+        let peer_addr = client.peer_addr().unwrap();
 
         let mut buffer = util::receive_with_delimiter(&mut client).await;
 
@@ -20,6 +21,7 @@ pub async fn handle_clients(listener: TcpListener, clients_list: util::Clients) 
 
         let client = util::Client::new(
             client,
+            peer_addr,
             os.to_string(),
             username.to_string(),
             device_name.to_string(),
