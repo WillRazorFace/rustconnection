@@ -26,7 +26,7 @@ fn read_user_input() -> Vec<String> {
     input
 }
 
-pub async fn main_menu(mut client_list: util::Clients) {
+pub async fn main_menu(client_list: util::Clients) {
     loop {
         let command = read_user_input();
         let (command, args) = (&command[0], &command[1..]);
@@ -80,7 +80,7 @@ pub async fn main_menu(mut client_list: util::Clients) {
                             let client = client_list.lock().await.remove(session);
 
                             println!(
-                                "[!] {}:{} disconnected [!]",
+                                "[!] {}/{} disconnected [!]",
                                 client.stream.peer_addr().unwrap(),
                                 client.username
                             );
@@ -110,6 +110,30 @@ pub async fn main_menu(mut client_list: util::Clients) {
                 // }
 
                 continue;
+            }
+            // Checks the connection with all clients in the list,
+            // remove the inactive ones
+            "refresh" => {
+                let mut remove_times: usize = 0;
+
+                for (_index, client) in client_list.lock().await.iter_mut().enumerate() {
+                    match core::check_connection(client).await {
+                        Ok(_e) => _e,
+                        Err(_e) => {
+                            println!(
+                                "[!] /{} disconnected [!]",
+                                //client.stream.peer_addr().unwrap(),
+                                client.username
+                            );
+                            remove_times += 1;
+                        }
+                    }
+                }
+
+                while remove_times > 0 {
+                    client_list.lock().await.remove(0);
+                    remove_times -= 1;
+                }
             }
             _ => {}
         }
