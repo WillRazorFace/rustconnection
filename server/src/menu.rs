@@ -114,9 +114,9 @@ pub async fn main_menu(client_list: util::Clients) {
             // Checks the connection with all clients in the list,
             // remove the inactive ones
             "refresh" => {
-                let mut remove_times: usize = 0;
+                let mut remove_index: Vec<usize> = Vec::new();
 
-                for (_index, client) in client_list.lock().await.iter_mut().enumerate() {
+                for (index, client) in client_list.lock().await.iter_mut().enumerate() {
                     match core::check_connection(client).await {
                         Ok(_e) => _e,
                         Err(_e) => {
@@ -125,14 +125,16 @@ pub async fn main_menu(client_list: util::Clients) {
                                 //client.stream.peer_addr().unwrap(),
                                 client.username
                             );
-                            remove_times += 1;
+                            remove_index.push(index);
                         }
                     }
                 }
 
-                while remove_times > 0 {
-                    client_list.lock().await.remove(0);
-                    remove_times -= 1;
+                let mut remove_times: usize = 0;
+
+                for index in remove_index.iter() {
+                    client_list.lock().await.remove(index - remove_times);
+                    remove_times += 1;
                 }
             }
             _ => {}
